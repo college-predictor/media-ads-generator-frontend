@@ -15,7 +15,7 @@ export default function ChatbotPage() {
             </p>
           </div>
           
-          <div className="h-270">
+          <div className="h-full">
             <Chatbot />
           </div>
         </div>

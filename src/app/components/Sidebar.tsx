@@ -27,7 +27,6 @@ const Sidebar = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: 'home' },
-    { name: 'Templates', href: '/dashboard/templates', icon: 'document' },
     { name: 'Chatbot', href: '/dashboard/chatbot', icon: 'chat' },
   ];
 
@@ -69,24 +68,6 @@ const Sidebar = () => {
           );
         })}
       </nav>
-
-      {/* Saved Templates Section */}
-      <div className="mt-8 px-6">
-        <h3 className="text-sm font-semibold text-blue-300 uppercase tracking-wider mb-3">
-          Saved Templates
-        </h3>
-        <div className="space-y-2">
-          {['Template 1', 'Template 2', 'Template 3'].map((template, index) => (
-            <Link
-              key={index}
-              href={`/dashboard/templates/${template.toLowerCase().replace(' ', '-')}`}
-              className="block px-3 py-2 text-sm text-blue-200 hover:text-white hover:bg-blue-800 rounded transition-colors duration-200"
-            >
-              {template}
-            </Link>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
