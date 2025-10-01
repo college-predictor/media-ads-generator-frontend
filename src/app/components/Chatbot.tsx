@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TemplateCard from './template_card';
+import FinalTemplateCard from './final_template_card';
 
 interface Message {
     id: string;
@@ -11,7 +12,7 @@ interface Message {
     sender: 'user' | 'bot';
     timestamp: Date;
     category?: string;
-    templates?: TemplateData[];
+    templates?: TemplateData[] | FinalTemplateData[];
 }
 
 interface TemplateData {
@@ -19,6 +20,14 @@ interface TemplateData {
     title: string;
     description: string;
     image_url: string;
+}
+
+interface FinalTemplateData {
+    title: string;
+    description: string;
+    image_url: string; // base64 PNG string
+    caption: string;
+    tags: string[];
 }
 
 const Chatbot = () => {
@@ -122,6 +131,16 @@ const Chatbot = () => {
                                 return;
                             }
                             
+                            // Handle final templates without message
+                            if (data.category === 'final_templates' && data.templates) {
+                                console.log('Adding final templates:', {
+                                    category: data.category,
+                                    templates: data.templates
+                                });
+                                addBotMessage('Here are your final templates:', data.category, data.templates);
+                                return;
+                            }
+                            
                             if (data.message) {
                                 console.log('Adding bot message with templates:', {
                                     message: data.message,
@@ -142,6 +161,18 @@ const Chatbot = () => {
                                 templates: data.templates
                             });
                             addBotMessage('Here are some template suggestions:', data.category, data.templates);
+                            return;
+                        }
+                        
+                        // Handle final templates at root level
+                        if (data.category === 'final_templates' && data.templates) {
+                            setMsgLoading(false);
+                            setLoadingMessage(null);
+                            console.log('Adding final templates at root level:', {
+                                category: data.category,
+                                templates: data.templates
+                            });
+                            addBotMessage('Here are your final templates:', data.category, data.templates);
                             return;
                         }
 
@@ -354,12 +385,14 @@ const Chatbot = () => {
                                 selectedTemplate: selectedTemplatesByMessage[message.id]
                             });
                             
+                            // Handle regular template suggestions
                             if (message.category === 'template_suggestion' && message.templates) {
+                                const templates = message.templates as TemplateData[];
                                 const selectedTemplateId = selectedTemplatesByMessage[message.id];
                                 
                                 // If a template is selected, show only that template
                                 if (selectedTemplateId) {
-                                    const selectedTemplate = message.templates.find(t => t.id === selectedTemplateId);
+                                    const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
                                     if (selectedTemplate) {
                                         console.log('Rendering selected template:', selectedTemplate);
                                         return (
@@ -378,10 +411,10 @@ const Chatbot = () => {
                                 }
                                 
                                 // Otherwise, show all templates
-                                console.log('Rendering all template cards:', message.templates);
+                                console.log('Rendering all template cards:', templates);
                                 return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
-                                        {message.templates.map((template) => {
+                                        {templates.map((template) => {
                                             console.log('Rendering template card:', template);
                                             return (
                                                 <TemplateCard
@@ -397,6 +430,30 @@ const Chatbot = () => {
                                     </div>
                                 );
                             }
+                            
+                            // Handle final templates
+                            if (message.category === 'final_templates' && message.templates) {
+                                const finalTemplates = message.templates as FinalTemplateData[];
+                                console.log('Rendering final template cards:', finalTemplates);
+                                return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 mb-4">
+                                        {finalTemplates.map((template, index) => {
+                                            console.log('Rendering final template card:', template);
+                                            return (
+                                                <FinalTemplateCard
+                                                    key={`final-template-${index}`}
+                                                    title={template.title}
+                                                    description={template.description}
+                                                    image_url={template.image_url}
+                                                    caption={template.caption}
+                                                    tags={template.tags}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            }
+                            
                             return null;
                         })()}
                     </div>
@@ -415,7 +472,7 @@ const Chatbot = () => {
             </div>
 
             {/* Input */}
-            <div className="border-t border-blue-200 p-4">
+            <div className="border-t border-blue-200 p-4 text-black">
                 <div className="flex space-x-2">
                     <input
                         type="text"
